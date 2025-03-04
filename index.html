@@ -14,6 +14,14 @@
         .leaflet-container {
             background: #f4e6c2;
         }
+        .region-label {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -35,39 +43,71 @@
         let data = {}; // Speichert die Einträge
         const password = "NAP"; // Passwort für Änderungen
 
-        function onMapClick(e) {
-            let userPassword = prompt("Passwort eingeben, um einen Eintrag zu machen:");
-            if (userPassword !== password) {
-                alert("Falsches Passwort!");
-                return;
-            }
+        // Definierte Bereiche (Koordinaten für Klick-Zonen)
+        let regions = [
+            { name: "R1", bounds: [[200, 200], [300, 300]] },
+            { name: "R2", bounds: [[400, 400], [500, 500]] },
+            { name: "R3", bounds: [[600, 600], [700, 700]] }
+        ];
+        
+        function addRegion(region) {
+            let rectangle = L.rectangle(region.bounds, { color: "transparent", weight: 1 }).addTo(map);
             
-            let code = prompt("Gib einen 3-Zeichen-Code ein:");
-            if (!code || code.length !== 3) {
-                alert("Bitte genau 3 Zeichen eingeben!");
-                return;
-            }
+            let label = L.divIcon({
+                className: 'region-label',
+                html: data[region.name] || region.name,
+                iconSize: null
+            });
             
-            let key = `${Math.round(e.latlng.lat)},${Math.round(e.latlng.lng)}`;
-            data[key] = code;
-            updateMarkers();
+            let marker = L.marker([(region.bounds[0][0] + region.bounds[1][0]) / 2, (region.bounds[0][1] + region.bounds[1][1]) / 2], {
+                icon: label,
+                interactive: false
+            }).addTo(map);
+            
+            rectangle.on('click', function () {
+                let userPassword = prompt("Passwort eingeben, um eine Änderung vorzunehmen:");
+                if (userPassword !== password) {
+                    alert("Falsches Passwort!");
+                    return;
+                }
+                
+                let code = prompt("Gib einen 3-Zeichen-Code ein (leer lassen zum Löschen):");
+                if (code !== null && code.length !== 3 && code.length !== 0) {
+                    alert("Bitte genau 3 Zeichen eingeben oder leer lassen, um zu löschen!");
+                    return;
+                }
+                
+                if (code === "") {
+                    delete data[region.name];
+                } else {
+                    data[region.name] = code;
+                }
+                updateLabels();
+            });
         }
         
-        function updateMarkers() {
+        function updateLabels() {
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker) {
                     map.removeLayer(layer);
                 }
             });
             
-            for (let key in data) {
-                let [lat, lng] = key.split(",").map(Number);
-                L.marker([lat, lng]).addTo(map)
-                    .bindPopup(`Code: ${data[key]}`);
-            }
+            regions.forEach(region => {
+                let label = L.divIcon({
+                    className: 'region-label',
+                    html: data[region.name] || region.name,
+                    iconSize: null
+                });
+                
+                L.marker([(region.bounds[0][0] + region.bounds[1][0]) / 2, (region.bounds[0][1] + region.bounds[1][1]) / 2], {
+                    icon: label,
+                    interactive: false
+                }).addTo(map);
+            });
         }
         
-        map.on('click', onMapClick);
+        regions.forEach(addRegion);
     </script>
 </body>
 </html>

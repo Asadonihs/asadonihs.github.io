@@ -6,10 +6,19 @@
     <title>Interaktive Karte</title>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
+   <style>
         #map {
             height: 90vh;
-            width: 100%;
+            width: 75%;
+            float: left;
+        }
+        #sidebar {
+            width: 25%;
+            float: right;
+            padding: 10px;
+            background: #f4f4f4;
+            height: 90vh;
+            overflow-y: auto;
         }
         .leaflet-container {
             background: #f4e6c2;
@@ -21,6 +30,14 @@
             border-radius: 5px;
             font-weight: bold;
             font-size: 14px;
+            text-align: center;
+        }
+        .code-entry {
+            padding: 5px;
+            margin: 5px;
+            background: lightgray;
+            cursor: pointer;
+            text-align: center;
         }
     </style>
 </head>
@@ -45,7 +62,7 @@
 
         // Koordinaten der erkannten Punkte
         let regions = [
-            { name: "R1", center: [711, 6] }, { name: "R2", center: [307, 6] },
+            { name: "R1", center: [6, 771] }, { name: "R2", center: [307, 6] },
             { name: "R3", center: [41, 10] }, { name: "R4", center: [978, 20] },
             { name: "R5", center: [533, 19] }, { name: "R6", center: [821, 25] },
             { name: "R7", center: [205, 30] }, { name: "R8", center: [368, 59] },

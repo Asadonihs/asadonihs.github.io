@@ -35,7 +35,7 @@
             maxZoom: 2
         });
         
-        const imageUrl = 'image.png'; // Hier wird das Bild als Karte verwendet
+        const imageUrl = 'image1.png'; // Hier wird das neue Bild mit roten Punkten verwendet
         const imageBounds = [[0, 0], [1000, 1000]];
         L.imageOverlay(imageUrl, imageBounds).addTo(map);
         map.fitBounds(imageBounds);
@@ -43,28 +43,42 @@
         let data = {}; // Speichert die Einträge
         const password = "NAP"; // Passwort für Änderungen
 
-        // Definierte Bereiche (Koordinaten für Klick-Zonen)
+        // Koordinaten der erkannten Punkte
         let regions = [
-            { name: "R1", bounds: [[200, 200], [300, 300]] },
-            { name: "R2", bounds: [[400, 400], [500, 500]] },
-            { name: "R3", bounds: [[600, 600], [700, 700]] }
+            { name: "R1", center: [796, 978] }, { name: "R2", center: [500, 976] },
+            { name: "R3", center: [145, 969] }, { name: "R4", center: [664, 926] },
+            { name: "R5", center: [572, 902] }, { name: "R6", center: [869, 890] },
+            { name: "R7", center: [351, 880] }, { name: "R8", center: [441, 860] },
+            { name: "R9", center: [692, 860] }, { name: "R10", center: [134, 846] },
+            { name: "R11", center: [899, 822] }, { name: "R12", center: [769, 810] },
+            { name: "R13", center: [302, 802] }, { name: "R14", center: [532, 792] },
+            { name: "R15", center: [59, 775] }, { name: "R16", center: [474, 763] },
+            { name: "R17", center: [991, 751] }, { name: "R18", center: [851, 735] },
+            { name: "R19", center: [622, 719] }, { name: "R20", center: [186, 718] },
+            { name: "R21", center: [364, 690] }, { name: "R22", center: [97, 664] },
+            { name: "R23", center: [780, 660] }, { name: "R24", center: [971, 648] },
+            { name: "R25", center: [266, 624] }, { name: "R26", center: [527, 618] },
+            { name: "R27", center: [944, 586] }, { name: "R28", center: [689, 582] },
+            { name: "R29", center: [136, 566] }, { name: "R30", center: [448, 562] },
+            { name: "R31", center: [242, 520] }, { name: "R32", center: [92, 502] },
+            { name: "R33", center: [906, 482] }, { name: "R34", center: [763, 476] },
+            { name: "R35", center: [517, 470] }, { name: "R36", center: [30, 462] },
+            { name: "R37", center: [990, 440] }, { name: "R38", center: [649, 438] }
         ];
         
         function addRegion(region) {
-            let rectangle = L.rectangle(region.bounds, { color: "transparent", weight: 1 }).addTo(map);
-            
             let label = L.divIcon({
                 className: 'region-label',
                 html: data[region.name] || region.name,
                 iconSize: null
             });
             
-            let marker = L.marker([(region.bounds[0][0] + region.bounds[1][0]) / 2, (region.bounds[0][1] + region.bounds[1][1]) / 2], {
+            let marker = L.marker(region.center, {
                 icon: label,
-                interactive: false
+                interactive: true
             }).addTo(map);
             
-            rectangle.on('click', function () {
+            marker.on('click', function () {
                 let userPassword = prompt("Passwort eingeben, um eine Änderung vorzunehmen:");
                 if (userPassword !== password) {
                     alert("Falsches Passwort!");
@@ -100,9 +114,9 @@
                     iconSize: null
                 });
                 
-                L.marker([(region.bounds[0][0] + region.bounds[1][0]) / 2, (region.bounds[0][1] + region.bounds[1][1]) / 2], {
+                L.marker(region.center, {
                     icon: label,
-                    interactive: false
+                    interactive: true
                 }).addTo(map);
             });
         }

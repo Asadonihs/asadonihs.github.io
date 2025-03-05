@@ -6,10 +6,19 @@
     <title>Interaktive Karte</title>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-   <style>
+    <style>
         #map {
             height: 90vh;
-            width: 100%;
+            width: 75%;
+            float: left;
+        }
+        #sidebar {
+            width: 25%;
+            float: right;
+            padding: 10px;
+            background: #f4f4f4;
+            height: 90vh;
+            overflow-y: auto;
         }
         .leaflet-container {
             background: #f4e6c2;
@@ -21,13 +30,24 @@
             border-radius: 5px;
             font-weight: bold;
             font-size: 14px;
+            text-align: center;
         }
-
+        .code-entry {
+            padding: 5px;
+            margin: 5px;
+            background: lightgray;
+            cursor: pointer;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h2>Interaktive Karte</h2>
     <div id="map"></div>
+    <div id="sidebar">
+        <h3>Code-Gruppen</h3>
+        <div id="code-list"></div>
+    </div>
 
     <script>
         const map = L.map('map', {
@@ -36,55 +56,30 @@
             maxZoom: 2
         });
         
-        const imageUrl = 'image.png'; // Hier wird das neue Bild mit roten Punkten verwendet
+        const imageUrl = 'image1.png'; // Hier wird das neue Bild mit roten Punkten verwendet
         const imageBounds = [[0, 0], [1000, 1000]];
         L.imageOverlay(imageUrl, imageBounds).addTo(map);
         map.fitBounds(imageBounds);
 
         let data = {}; // Speichert die Einträge
         const password = "NAP"; // Passwort für Änderungen
+        let selectedRegions = new Set(); // Set für Mehrfachauswahl
 
-        // Koordinaten der erkannten Punkte
-       let regions = [
-    { name: "R1", center: [50, 680] }, { name: "R2", center: [50, 273] },
-    { name: "R3", center: [54, 4] }, { name: "R4", center: [64, 949] },
-    { name: "R5", center: [63, 500] }, { name: "R6", center: [68, 791] },
-    { name: "R7", center: [73, 170] }, { name: "R8", center: [101, 334] },
-    { name: "R9", center: [104, 595] }, { name: "R10", center: [136, 99] },
-    { name: "R11", center: [141, 860] }, { name: "R12", center: [164, 655] },
-    { name: "R13", center: [171, 258] }, { name: "R14", center: [174, 469] },
-    { name: "R15", center: [183, 8] }, { name: "R16", center: [190, 389] },
-    { name: "R17", center: [195, 956] }, { name: "R18", center: [197, 770] },
-    { name: "R19", center: [233, 605] }, { name: "R20", center: [235, 172] },
-    { name: "R21", center: [280, 333] }, { name: "R22", center: [281, 66] },
-    { name: "R23", center: [290, 792] }, { name: "R24", center: [293, 885] },
-    { name: "R25", center: [316, 214] }, { name: "R26", center: [338, 547] },
-    { name: "R27", center: [358, 963] }, { name: "R28", center: [360, 688] },
-    { name: "R29", center: [363, -3] }, { name: "R30", center: [382, 367] },
-    { name: "R31", center: [397, 137] }, { name: "R32", center: [418, 68] },
-    { name: "R33", center: [443, 868] }, { name: "R34", center: [457, 773] },
-    { name: "R35", center: [515, 482] }, { name: "R36", center: [517, 1] },
-    { name: "R37", center: [521, 959] }, { name: "R38", center: [551, 745] },
-    { name: "R39", center: [552, 180] }, { name: "R40", center: [572, 302] },
-    { name: "R41", center: [575, 617] }, { name: "R42", center: [579, 875] },
-    { name: "R43", center: [595, 89] }, { name: "R44", center: [658, 0] },
-    { name: "R45", center: [667, 833] }, { name: "R46", center: [667, 970] },
-    { name: "R47", center: [672, 503] }, { name: "R48", center: [689, 744] },
-    { name: "R49", center: [701, 143] }, { name: "R50", center: [714, 345] },
-    { name: "R51", center: [732, 240] }, { name: "R52", center: [739, 626] },
-    { name: "R53", center: [752, 63] }, { name: "R54", center: [771, 914] },
-    { name: "R55", center: [785, 769] }, { name: "R56", center: [794, 378] },
-    { name: "R57", center: [812, 569] }, { name: "R58", center: [812, 173] },
-    { name: "R59", center: [832, 2] }, { name: "R60", center: [857, 961] },
-    { name: "R61", center: [866, 500] }, { name: "R62", center: [867, 317] },
-    { name: "R63", center: [869, 700] }, { name: "R64", center: [885, 834] },
-    { name: "R65", center: [908, 114] }, { name: "R66", center: [927, 334] },
-    { name: "R67", center: [936, 635] }, { name: "R68", center: [952, 22] },
-    { name: "R69", center: [969, 957] }, { name: "R70", center: [974, 177] },
-    { name: "R71", center: [978, 477] }, { name: "R72", center: [981, 812] },
-    { name: "R73", center: [986, 324] }, { name: "R74", center: [991, 642] }
-];
-
+        let regions = [
+            { name: "R1", center: [50, 680] }, { name: "R2", center: [50, 273] },
+            { name: "R3", center: [54, 4] }, { name: "R4", center: [64, 949] },
+            { name: "R5", center: [63, 500] }, { name: "R6", center: [68, 791] },
+            { name: "R7", center: [73, 170] }, { name: "R8", center: [101, 334] },
+            { name: "R9", center: [104, 595] }, { name: "R10", center: [136, 99] },
+            { name: "R11", center: [141, 860] }, { name: "R12", center: [164, 655] },
+            { name: "R13", center: [171, 258] }, { name: "R14", center: [174, 469] },
+            { name: "R15", center: [183, 8] }, { name: "R16", center: [190, 389] },
+            { name: "R17", center: [195, 956] }, { name: "R18", center: [197, 770] },
+            { name: "R19", center: [233, 605] }, { name: "R20", center: [235, 172] },
+            { name: "R21", center: [280, 333] }, { name: "R22", center: [281, 66] },
+            { name: "R23", center: [290, 792] }, { name: "R24", center: [293, 885] },
+            { name: "R73", center: [986, 324] }, { name: "R74", center: [991, 642] }
+        ];
         
         function addRegion(region) {
             let label = L.divIcon({
@@ -98,26 +93,38 @@
                 interactive: true
             }).addTo(map);
             
-            marker.on('click', function () {
-                let userPassword = prompt("Passwort eingeben, um eine Änderung vorzunehmen:");
-                if (userPassword !== password) {
-                    alert("Falsches Passwort!");
-                    return;
-                }
-                
-                let code = prompt("Gib einen 3-Zeichen-Code ein (leer lassen zum Löschen):");
-                if (code !== null && code.length !== 3 && code.length !== 0) {
-                    alert("Bitte genau 3 Zeichen eingeben oder leer lassen, um zu löschen!");
-                    return;
-                }
-                
-                if (code === "") {
-                    delete data[region.name];
+            marker.on('click', function (e) {
+                if (e.originalEvent.shiftKey) {
+                    selectedRegions.add(region.name);
                 } else {
-                    data[region.name] = code;
+                    selectedRegions.clear();
+                    selectedRegions.add(region.name);
                 }
-                updateLabels();
+                updateSelection();
             });
+        }
+        
+        function updateSelection() {
+            let userPassword = prompt("Passwort eingeben, um eine Änderung vorzunehmen:");
+            if (userPassword !== password) {
+                alert("Falsches Passwort!");
+                return;
+            }
+            
+            let code = prompt("Gib einen 3-Zeichen-Code ein (leer lassen zum Löschen):");
+            if (code !== null && code.length !== 3 && code.length !== 0) {
+                alert("Bitte genau 3 Zeichen eingeben oder leer lassen, um zu löschen!");
+                return;
+            }
+            
+            selectedRegions.forEach(region => {
+                if (code === "") {
+                    delete data[region];
+                } else {
+                    data[region] = code;
+                }
+            });
+            updateLabels();
         }
         
         function updateLabels() {

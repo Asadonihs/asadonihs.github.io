@@ -39,6 +39,9 @@
             cursor: pointer;
             text-align: center;
         }
+        .selected {
+            border: 2px solid red;
+        }
     </style>
 </head>
 <body>
@@ -47,6 +50,7 @@
     <div id="sidebar">
         <h3>Code-Gruppen</h3>
         <div id="code-list"></div>
+        <button onclick="batchEditRegions()">Mehrere bearbeiten</button>
     </div>
 
     <script>
@@ -56,7 +60,7 @@
             maxZoom: 2
         });
         
-        const imageUrl = 'image.png'; // Hier wird das neue Bild mit roten Punkten verwendet
+        const imageUrl = 'image.png';
         const imageBounds = [[0, 0], [1000, 1000]];
         L.imageOverlay(imageUrl, imageBounds).addTo(map);
         map.fitBounds(imageBounds);
@@ -64,8 +68,9 @@
         let data = {}; // Speichert die Einträge
         const password = "NAP"; // Passwort für Änderungen
         let selectedRegions = new Set(); // Set für Mehrfachauswahl
+        let markers = {}; // Speichert die Marker-Referenzen
 
-  let regions = [
+        let regions = [
     { name: "R1", center: [50, 680] }, { name: "R2", center: [50, 273] },
     { name: "R3", center: [54, 4] }, { name: "R4", center: [64, 949] },
     { name: "R5", center: [63, 500] }, { name: "R6", center: [68, 791] },
@@ -116,6 +121,7 @@
                 icon: label,
                 interactive: true
             }).addTo(map);
+            markers[region.name] = marker;
             
             marker.on('click', function (e) {
                 if (e.originalEvent.shiftKey) {
@@ -124,22 +130,34 @@
                     selectedRegions.clear();
                     selectedRegions.add(region.name);
                 }
-                updateSelection();
+                updateSidebar();
             });
         }
         
-        function updateSelection() {
-            let userPassword = prompt("Passwort eingeben, um eine Änderung vorzunehmen:");
+        function updateSidebar() {
+            let sidebar = document.getElementById("code-list");
+            sidebar.innerHTML = "<h3>Ausgewählte Bereiche:</h3>";
+            selectedRegions.forEach(region => {
+                let entry = document.createElement("div");
+                entry.className = "code-entry";
+                entry.innerText = region;
+                sidebar.appendChild(entry);
+            });
+        }
+        
+        function batchEditRegions() {
+            if (selectedRegions.size === 0) {
+                alert("Bitte wähle mindestens einen Bereich aus.");
+                return;
+            }
+            
+            let userPassword = prompt("Passwort eingeben, um Änderungen vorzunehmen:");
             if (userPassword !== password) {
                 alert("Falsches Passwort!");
                 return;
             }
             
             let code = prompt("Gib einen 3-Zeichen-Code ein (leer lassen zum Löschen):");
-            if (code !== null && code.length !== 3 && code.length !== 0) {
-                alert("Bitte genau 3 Zeichen eingeben oder leer lassen, um zu löschen!");
-                return;
-            }
             
             selectedRegions.forEach(region => {
                 if (code === "") {
@@ -148,16 +166,12 @@
                     data[region] = code;
                 }
             });
+            
             updateLabels();
+            updateSidebar();
         }
         
         function updateLabels() {
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
-            });
-            
             regions.forEach(region => {
                 let label = L.divIcon({
                     className: 'region-label',
@@ -165,10 +179,15 @@
                     iconSize: null
                 });
                 
-                L.marker(region.center, {
+                if (markers[region.name]) {
+                    map.removeLayer(markers[region.name]);
+                }
+                
+                let newMarker = L.marker(region.center, {
                     icon: label,
                     interactive: true
                 }).addTo(map);
+                markers[region.name] = newMarker;
             });
         }
         

@@ -6,6 +6,31 @@
     <title>Interaktive Karte</title>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script>
+        async function loadData() {
+            try {
+                let response = await fetch('data.json');
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (e) {
+                console.error("Fehler beim Laden der Daten:", e);
+            }
+            return {}; // Falls keine Daten vorhanden sind
+        }
+
+        async function saveData() {
+            try {
+                await fetch('data.json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } catch (e) {
+                console.error("Fehler beim Speichern der Daten:", e);
+            }
+        }
+    </script>
     <style>
         #map {
             height: 90vh;
@@ -65,10 +90,10 @@
         L.imageOverlay(imageUrl, imageBounds).addTo(map);
         map.fitBounds(imageBounds);
 
-        let data = {}; // Speichert die Einträge
-        const password = "NAP"; // Passwort für Änderungen
-        let selectedRegions = new Set(); // Set für Mehrfachauswahl
-        let markers = {}; // Speichert die Marker-Referenzen
+        let data = {};
+        let selectedRegions = new Set();
+        let markers = {};
+        const password = "NAP";
 
         let regions = [
     { name: "R1", center: [50, 680] }, { name: "R2", center: [50, 273] },
@@ -108,7 +133,13 @@
     { name: "R69", center: [969, 957] }, { name: "R70", center: [974, 177] },
     { name: "R71", center: [978, 477] }, { name: "R72", center: [981, 812] },
     { name: "R73", center: [986, 324] }, { name: "R74", center: [991, 642] }
-];
+        ];
+        
+        async function initializeMap() {
+            data = await loadData();
+            regions.forEach(addRegion);
+            updateLabels();
+        }
         
         function addRegion(region) {
             let label = L.divIcon({
@@ -145,7 +176,7 @@
             });
         }
         
-        function batchEditRegions() {
+        async function batchEditRegions() {
             if (selectedRegions.size === 0) {
                 alert("Bitte wähle mindestens einen Bereich aus.");
                 return;
@@ -167,6 +198,7 @@
                 }
             });
             
+            await saveData();
             updateLabels();
             updateSidebar();
         }
@@ -191,7 +223,7 @@
             });
         }
         
-        regions.forEach(addRegion);
+        initializeMap();
     </script>
 </body>
 </html>
